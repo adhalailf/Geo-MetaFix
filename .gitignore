@@ -1,0 +1,14 @@
+# Python environment
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# macOS system files
+.DS_Store
+
+# IDE files
+.vscode/
+
+# Project specific
+images_output/

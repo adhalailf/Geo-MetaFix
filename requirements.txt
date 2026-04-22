@@ -1,0 +1,7 @@
+opencv-python
+onnxruntime
+piexif
+pandas
+numpy
+PyQt6 
+pytesseract
