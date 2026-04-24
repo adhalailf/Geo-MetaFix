@@ -19,52 +19,47 @@ class OCREngine:
         if img is None: return None
 
         h, w = img.shape[:2]
-        # KITA PERKETAT LAGI: Ambil hanya 10% area terbawah (tadinya 15-20%)
-        # Ini akan membuang teks sampah/ranting di bagian atas watermark
-        roi = img[int(h*0.90):h, 0:w] 
+        # 1. ROI Fokus
+        roi = img[int(h*0.92):h, int(w*0.435):w] 
 
+        # 2. Grayscale & Contrast
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        
-        # Perbesar 2x agar teks lebih jelas
+        gray = cv2.convertScaleAbs(gray, alpha=1.5, beta=0) 
+
+        # 3. Upscale (3x agar angka lebih besar dan jelas)
         gray = cv2.resize(gray, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
 
-        # Thresholding Inverted
+        # 4. Blur sedikit untuk menyatukan pixel yang pecah
+        gray = cv2.GaussianBlur(gray, (3,3), 0)
+
+        # 5. Threshold (Putih jadi Hitam, Hitam jadi Putih)
         _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-        # Pastikan file debug disimpan di folder root agar mudah ditemukan
-        # Kita gunakan os.path untuk memastikan lokasi penyimpanan
-        import os
-        debug_path = os.path.join(os.getcwd(), "debug_ocr.png")
-        # Thresholding Inverted
-        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-        # TAMBAHKAN INI: Menebalkan teks sedikit agar angka 9 tidak terlihat seperti 0
+        # 6. Tebalkan Teks Hitam (Gunakan Erode karena background putih)
         kernel = np.ones((2,2), np.uint8)
-        thresh = cv2.dilate(thresh, kernel, iterations=1)
-        cv2.imwrite(debug_path, thresh) 
+        thresh = cv2.erode(thresh, kernel, iterations=1)
+
+        # Simpan untuk cek visual
+        import os
+        cv2.imwrite(os.path.join(os.getcwd(), "debug_ocr.png"), thresh) 
 
         return thresh
 
+   
     def extract_text(self, image_path):
         try:
             processed_img = self.preprocess_image(image_path)
             
-            # Gunakan PSM 6 dan paksa Tesseract mengenali karakter koordinat
-            custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789°\'",.NSEW/ '
+            custom_config = r'--oem 3 --psm 6'
             text = pytesseract.image_to_string(processed_img, config=custom_config)
+            text = text.replace('7/', ',').replace('/', ',').strip()
 
-            # --- PEMBERSIHAN KHUSUS HALUSINASI ---
-            # 1. Ubah halusinasi '7/' atau '/64' kembali menjadi desimal ',764'
-            text = text.replace('7/', ',').replace('/', ',')
-            
-            # 2. Hapus semua spasi agar angka yang terpisah (seperti 43 764) menyatu kembali
-            text = text.replace(" ", "")
-            
             return text
         except Exception as e:
             logging.error(f"Terjadi kesalahan saat OCR: {e}")
-            return ""
+            return ""     
         
+
 # --- BLOK PENGUJIAN LOKAL ---
 if __name__ == "__main__":
     # Ganti dengan salah satu path foto sampel Anda untuk testing
