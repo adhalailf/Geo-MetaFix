@@ -11,4 +11,4 @@ __pycache__/
 .vscode/
 
 # Project specific
-images_output/
+assets/images/

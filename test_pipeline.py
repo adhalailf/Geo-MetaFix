@@ -46,7 +46,7 @@ def run_full_pipeline(image_path):
 if __name__ == "__main__":
     # Masukkan path salah satu foto asli Anda di sini
     # Contoh untuk macOS/Linux: "images/f_TimePhoto_20250924_123916.jpg"
-    path_foto = "f_TimePhoto_20250927_153916.jpg" # Pastikan file ada di folder yang sama atau tulis path lengkap
+    path_foto = "assets/images/TimePhoto_20250920_131859.jpg" # Pastikan file ada di folder yang sama atau tulis path lengkap
     
     if os.path.exists(path_foto):
         run_full_pipeline(path_foto)
